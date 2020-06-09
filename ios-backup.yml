@@ -1,0 +1,37 @@
+- name: iOS device backup
+  hosts: all
+  gather_facts: false
+  tasks:
+
+  - name: pull the config
+    ios_command:
+      commands: show run
+    register: backup
+
+  - name: get timestamp
+    set_fact: time="{{lookup('pipe','date \"+%Y-%m-%d-%H-%M\"')}}"
+    run_once: true
+
+  - block:
+    - name: create a local backup folder
+      delegate_to: localhost
+      file: 
+        path: /opt/ansible/ios/backup
+        state: directory
+        mode: '0755'
+        recurse: true
+      run_once: true
+
+    - name: create folder based on this host
+      delegate_to: localhost
+      file: 
+        path: "/opt/ansible/ios/backup/{{ inventory_hostname }}"
+        state: directory
+        mode: '0755'
+
+    - name: create backup file with timestamp
+      delegate_to: localhost
+      copy:
+        content: "{{ backup.stdout|join('\n') }}"
+        dest: "/opt/ansible/ios/backup/{{ inventory_hostname }}/{{ inventory_hostname }}-{{ time }}.txt"
+    become: true
