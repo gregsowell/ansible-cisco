@@ -1,0 +1,98 @@
+---
+- name: Create a Tenant, App profile, VRF, Bridge Domain, and 10 EPGs
+  hosts: localhost
+  gather_facts: false
+  vars:
+#    aci_host: IPAddressOfACI
+#    aci_username: admin
+#    aci_password: SuppliedPassword
+    aci_tenant: gtest
+    aci_ap_name: gtest-apps
+    aci_bd: gtest-bridge
+    aci_vrf: gtest-vrf
+    aci_epgs:
+      - _epg: Texas
+        _desc: obviously the best
+      - _epg: Arizona
+        _desc: really hot
+      - _epg: Utah
+        _desc: boring
+      - _epg: Nevada
+        _desc: hot and expensive
+      - _epg: Oklahoma
+        _desc: wind whips
+      - _epg: Nebraska
+        _desc: corn right...corn
+      - _epg: Idaho
+        _desc: waffle fries
+      - _epg: Washington
+        _desc: rain I think
+      - _epg: California
+        _desc: beautiful to visit
+      - _epg: Florida
+        _desc: watch out for Florida man
+    
+
+  tasks:
+  - name: Create a tenant
+    aci_tenant:
+      host: "{{ aci_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      tenant: "{{ aci_tenant }}"
+      description: Greg Ansible Testing
+      state: present
+      validate_certs: false
+
+  - name: Add a new AP
+    aci_ap:
+      host: "{{ aci_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      tenant: "{{ aci_tenant }}"
+      ap: "{{ aci_ap_name }}"
+      description: Greg Ansible Testing
+      state: present
+      validate_certs: false
+
+  - name: Add a new VRF to a tenant
+    aci_vrf:
+      host: "{{ aci_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      vrf: "{{ aci_vrf }}"
+      tenant: "{{ aci_tenant }}"
+      descr: Greg Ansible Testing
+      policy_control_preference: enforced
+      policy_control_direction: ingress
+      state: present
+      validate_certs: false
+
+  - name: Add Bridge Domain
+    aci_bd:
+      host: "{{ aci_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      tenant: "{{ aci_tenant }}"
+      bd: "{{ aci_bd }}"
+      vrf: "{{ aci_vrf }}"
+      state: present
+      validate_certs: false
+
+  - name: Add new EPGs
+    aci_epg:
+      host: "{{ aci_host }}"
+      username: "{{ aci_username }}"
+      password: "{{ aci_password }}"
+      tenant: "{{ aci_tenant }}"
+      ap: "{{ aci_ap_name }}"
+      epg: "{{ all_epgs._epg }}"
+      description: "{{ all_epgs._desc}}"
+      bd: "{{ aci_bd }}"
+      priority: unspecified
+      intra_epg_isolation: unenforced
+      state: present
+      validate_certs: false
+    loop: "{{ aci_epgs }}"
+    loop_control:
+      loop_var: all_epgs
