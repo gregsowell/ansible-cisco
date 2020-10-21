@@ -1,5 +1,5 @@
 ---
-- name: update SNMP info for Cisco kit
+- name: update SNMP info for Cisco or Dell6 kit
   hosts: cat_upgrade
   gather_facts: false
   vars:
