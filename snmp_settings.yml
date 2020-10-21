@@ -1,0 +1,7 @@
+snmp_hosts:
+  - dev: sw1
+    location: site1
+  - dev: sw2
+    location: site2
+  - dev: sw3
+    location: site3

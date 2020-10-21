@@ -1,0 +1,35 @@
+---
+- name: update SNMP info for Cisco kit
+  hosts: cat_upgrade
+  gather_facts: false
+  vars:
+    snmp_contact: Greg Sowell SSA
+    snmp_community_ro: MyROCommunity
+    snmp_community_rw: MyRWCommunity
+
+  vars_files:
+    - snmp_settings.yml
+  
+  tasks:
+
+  - name: Set SNMP info and enable the correct community string on Cisco IOS
+    when: 
+      - inventory_hostname == item.dev
+      - hostvars[inventory_hostname].ansible_network_os == 'ios'
+    ios_config:
+      lines: 
+        - "snmp-server contact {{ snmp_contact }}"
+        - "snmp-server location {{ item.location }}"
+        - "snmp-server community {{ snmp_community_ro }} RO"
+        - "snmp-server community {{ snmp_community_rw }} RW"
+    loop: "{{ snmp_hosts }}"
+
+  - name: Set SNMP info and enable the correct community string on Dellos 6
+    when: 
+      - inventory_hostname == item.dev
+      - hostvars[inventory_hostname].ansible_network_os == 'dellos6'
+    dellos6_config:
+      lines: 
+        - "snmp-server community {{ snmp_community_ro }} ro"
+        - "snmp-server community {{ snmp_community_rw }} rw"
+    loop: "{{ snmp_hosts }}"
