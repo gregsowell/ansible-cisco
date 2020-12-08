@@ -1,0 +1,25 @@
+---
+# Power down CSR1000v
+- name: Set the state of a virtual machine to poweroff
+  vmware_guest_powerstate:
+    hostname: "{{ deploy_vsphere_host }}"
+    username: "{{ deploy_vsphere_user }}"
+    password: "{{ deploy_vsphere_password }}"
+    validate_certs: false
+    folder: "/{{ deploy_vsphere_datacenter }}/{{ deploy_vsphere_folder }}"
+    name: "{{ inventory_hostname }}"
+    state: powered-off
+  delegate_to: localhost
+  register: deploy
+
+# Removes CSR1000v from inventory
+- name: Remove VM's from inventory
+  vmware_guest:
+    hostname: "{{ deploy_vsphere_host }}"
+    username: "{{ deploy_vsphere_user }}"
+    password: "{{ deploy_vsphere_password }}"
+    validate_certs: false
+    name: "{{ inventory_hostname }}"
+    state: absent
+  delegate_to: localhost
+  register: facts

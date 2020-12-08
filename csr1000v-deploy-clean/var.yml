@@ -1,0 +1,51 @@
+---
+# Student name will be the randomly generated name for the individual student account.
+# This is used for the vswitch name
+student_name: Greg 
+
+# Infrastructure
+# - Defines the vCenter / vSphere environment
+deploy_vsphere_host: '1.1.1.1'
+deploy_vsphere_user: 'UserName'
+deploy_vsphere_password: 'Password'
+deploy_vsphere_datacenter: 'Central'
+deploy_vsphere_folder: '/Ansible/workshop'
+deploy_vsphere_datastore: SSD
+
+# specific router configs
+routers:
+  - rtr_name: rtr1
+    gi1_ip: 172.30.0.1
+    gi2_ip: 10.100.100.1
+    gi3_ip: 10.200.200.1
+    notes: virtual student
+  - rtr_name: rtr2
+    gi1_ip: 172.30.0.2
+    gi2_ip: 10.101.101.2
+    gi3_ip: 10.200.200.2
+    notes: virtual student
+  - rtr_name: rtr3
+    gi1_ip: 172.30.0.3
+    gi2_ip: 10.100.100.3
+    notes: virtual student
+  - rtr_name: rtr4
+    gi1_ip: 172.30.0.4
+    gi2_ip: 10.101.101.4
+    notes: virtual student
+
+
+# Guest
+# - Describes virtual machine common options
+# username and password for the routers
+guest_username: cisco
+guest_password: lab
+
+guest_memory: '4096'
+guest_vcpu: '1'
+guest_disk: '8'
+guest_template: 'greg-csr1000v-universalk9.17.02.01r-vga'
+router_gateway: 'ip route vrf mgmt-intf 0.0.0.0 0.0.0.0 172.30.0.10'
+port_group1: 'Greg'
+port_group2: 'Greg'
+port_group3: 'Greg'
+# {"question_name":"VMWare Folder","question_description":"Folder to save VM into","required":true,"type":"text","variable":"vm_folder","min":0,"max":1024,"default":"/Ansible/Greg","choices":"","new_question":true}
