@@ -1,0 +1,19 @@
+---
+- name: configure cisco ntp settings from controller survey
+  hosts: sw1
+  gather_facts: false
+  vars:
+#    server1: 1.1.1.1
+#    server2: 2.2.2.2
+  tasks:
+  - name: apply server1 NTP settings
+    when: server1 is defined
+    ios_ntp:
+      server: "{{ server1 }}"
+      state: present
+
+  - name: apply server2 NTP settings
+    when: server2 is defined
+    ios_ntp:
+      server: "{{ server2 }}"
+      state: present
