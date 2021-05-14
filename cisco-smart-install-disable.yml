@@ -1,0 +1,10 @@
+---
+- name: disable cisco smart install
+  hosts: sw5
+  gather_facts: false
+  vars:
+  tasks:
+  - name: run the vstack command to disable smart install
+    ios_config:
+      lines:
+      - no vstack
