@@ -1,0 +1,69 @@
+---
+- name: demo working with Cisco ASAs
+  hosts: asav
+  gather_facts: false
+  vars:
+    net_obj: web-servers
+    net_host: 1.1.1.1
+#    net_state: merged
+    net_state: deleted
+    new_hosts: []
+
+  tasks:
+    - name: Gather listed OGs with provided configurations
+      cisco.asa.asa_ogs:
+        config:
+        state: gathered
+      register: list_ogs
+
+    - name: debug list_ogs
+      debug:
+        var: list_ogs.gathered[0].object_groups[0]
+
+    - name: block for removal of an entry
+      when: net_state == 'deleted'
+      block:
+        - name: create a new variable for hosts
+          when: item != net_host
+          set_fact:
+            new_hosts: "{{ new_hosts }} + [ '{{ item }}' ]"
+          loop: "{{ list_ogs.gathered[0].object_groups[0].network_object.host }}"
+
+        - name: remove a network object
+          cisco.asa.asa_ogs:
+            config:
+            - object_type: network
+              object_groups:
+                - name: "{{ net_obj }}"
+                  network_object:
+                    host: "{{ new_hosts }}"
+#                    host:
+#                      - "{{ new_hosts }}"
+            state: replaced
+          register: ogs_adjust  
+
+    - name: add a network object
+      when: net_state == 'merged'
+      cisco.asa.asa_ogs:
+        config:
+        - object_type: network
+          object_groups:
+            - name: "{{ net_obj }}"
+              network_object:
+                host:
+                  - "{{ net_host }}"
+        state: merged
+      register: ogs_adjust
+
+    - name: show og if there was a change
+#      when: ogs_adjust.changed == true
+      block:
+      - name: Gather listed OGs with provided configurations
+        cisco.asa.asa_ogs:
+          config:
+          state: gathered
+        register: list_ogs
+
+      - name: debug list_ogs
+        debug:
+          var: list_ogs.gathered[0].object_groups[0]
