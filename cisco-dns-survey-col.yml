@@ -1,0 +1,105 @@
+---
+- name: gather DNS servers from survey and update device
+  hosts: cat_upgrade
+  gather_facts: false
+  vars:
+  tasks:
+  - name: gather currently configured DNS servers
+    cisco.ios.ios_command:
+      commands:
+        - show run | inc ip name-server
+    register: show_command
+
+#  - name: debug show_command
+#    debug:
+##      var: show_command
+#      msg: "{{ item }}"
+#    loop: "{{ show_command.stdout_lines[0] }}"
+
+
+#  - name: include ntp server vars
+#    include_vars:
+#      file: "compliance-ntp-servers-{{ hostvars[inventory_hostname]['location'] }}.yml"
+
+#  - name: debug servers from file
+#    debug:
+##      var: servers
+#      msg: "{{ item }}"
+#    loop: "{{ servers }}"
+
+#  - name: set command structure based on server list
+#    set_fact:
+#      dns_list_command: "{{ dns_list_command }} + [ 'ntp server {{ item }}' ]"
+#    loop: "{{ servers }}"
+#    run_once: true
+
+  - name: Build servers variable
+    ansible.builtin.set_fact:
+      dns_list_command: 
+        - "ip name-server {{ server1 }}"
+        - "ip name-server {{ server2 }}"
+    run_once: true
+
+#  - name: debug servers command structure
+#    debug:
+##      var: dns_list_command
+#      msg: "{{ item }}"
+#    loop: "{{ dns_list_command }}"
+
+  - name: create list of servers that need to be removed
+    ansible.builtin.set_fact:
+      remove_servers: "{{ show_command.stdout_lines[0] | difference(dns_list_command) | list }}"
+
+#  - name: debug remove_servers variable
+#    debug:
+#      var: remove_servers
+
+  - name: put ios_command here to remove servers
+    when: "remove_servers[0] != ''"
+    cisco.ios.ios_config:
+      lines: 
+        - "no {{ item }}"
+    loop: "{{ remove_servers }}"
+    register: remove_result
+
+#  - name: debug remove_result variable
+#    debug:
+#      var: remove_result
+
+  - name: add DNS servers here
+    cisco.ios.ios_config:
+      lines: 
+        - "{{ item }}"
+    loop: "{{ dns_list_command }}"
+    register: add_result
+#  - name: debug add_result variable
+#    debug:
+#      var: add_result
+
+  - name: run this block when in check mode
+    when: 
+      - ansible_check_mode
+      - compliance_check is defined
+    check_mode: no
+    become: yes
+    block:
+      - name: build list from remove checks
+        delegate_to: localhost
+        when: remove_result.changed == true
+        ansible.builtin.shell:
+          cmd: "echo '{{ inventory_hostname }} remove existing NTP servers' >> {{ comp_file_loc }}"
+
+      - name: build list from add checks
+        delegate_to: localhost
+        when: add_result.changed == true
+        ansible.builtin.shell:
+          cmd: "echo '{{ inventory_hostname }} add new NTP servers' >> {{ comp_file_loc }}"
+
+#    - name: debug noncompliance file
+#      run_once: true
+#      debug:
+#        msg: "{{ lookup('file', '{{ comp_file_loc }}') }}"
+
+#      - name: debug noncompliance_list variable
+#        debug:
+#          var: noncompliance_list
